@@ -1,6 +1,5 @@
 import React from "react";
 import "./Root.css";
-// import Field from "./components/Field";
 import Button from "./components/Button";
 
 class Root extends React.Component {
@@ -12,11 +11,6 @@ class Root extends React.Component {
       nextIsReset: false
     };
   }
-
-  // changeValue = ev => {
-  //   let value = ev.target.value;
-  //   this.setState({ current: value });
-  // };
 
   reset = () => {
     this.setState({
@@ -32,7 +26,10 @@ class Root extends React.Component {
       previous.push(this.state.current + symbol);
       this.setState({ previous, nextIsReset: true });
     } else {
-      if (this.state.current === "0" && symbol !== "."  || this.state.nextIsReset) {
+      if (
+        (this.state.current === "0" && symbol !== ".") ||
+        this.state.nextIsReset
+      ) {
         this.setState({ current: symbol, nextIsReset: false });
       } else {
         this.setState({ current: this.state.current + symbol });
@@ -71,7 +68,6 @@ class Root extends React.Component {
 
     return (
       <div>
-        {/* <Field changeValue={this.changeValue} current={this.state.current} /> */}
         {this.state.previous.length > 0 ? (
           <div className="calc-operation">
             {this.state.previous[this.state.previous.length - 1]}
