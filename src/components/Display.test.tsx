@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { render, waitFor } from '@testing-library/react'
+import { render, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { vi } from 'vitest'
 
@@ -62,4 +62,43 @@ test('Display truncates input to maxLength', async () => {
 
   // sanitized and truncated to 6 characters -> '123456'
   await waitFor(() => expect(input.value).toBe('123456'))
+})
+
+test('Display blocks non-numeric keys when no onKeyDown provided', async () => {
+  const Wrapper = () => {
+    const [value, setValue] = React.useState('')
+    return <Display current={value} history={[]} onChange={setValue} maxLength={6} />
+  }
+
+  const utils = render(<Wrapper />)
+  const { getByRole } = utils
+  const input = getByRole('textbox') as HTMLInputElement
+  const user = userEvent.setup()
+
+  await user.clear(input)
+  // type a letter - should be blocked and not change value
+  await user.keyboard('a')
+  await waitFor(() => expect(input.value).toBe(''))
+})
+
+test('Display sanitizes pasted text', async () => {
+  const Wrapper = () => {
+    const [value, setValue] = React.useState('')
+    return <Display current={value} history={[]} onChange={setValue} maxLength={6} />
+  }
+
+  const utils = render(<Wrapper />)
+  const { getByRole } = utils
+  const input = getByRole('textbox') as HTMLInputElement
+
+  // simulate paste via userEvent (works in jsdom)
+  // simulate paste with fireEvent and clipboardData
+  fireEvent.paste(input, {
+    clipboardData: {
+      getData: () => '12a3.4b5678'
+    }
+  })
+
+  // sanitized and truncated to 6 characters -> '123.45'
+  await waitFor(() => expect(input.value).toBe('123.45'))
 })

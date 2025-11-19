@@ -42,8 +42,31 @@ function Display({ current, previous, history = [], onChange, onEnter, onKeyDown
         maxLength={maxLength}
         onChange={e => onChange(sanitize(e.target.value))}
         onKeyDown={e => {
+          // If parent provided a handler, delegate to it (e.g. App.handleKeyDown)
           if (onKeyDown) { onKeyDown(e); return }
-          if (e.key === 'Enter' && onEnter) onEnter()
+
+          // If Enter pressed, trigger onEnter if provided
+          if (e.key === 'Enter') {
+            if (onEnter) onEnter()
+            e.preventDefault()
+            return
+          }
+
+          // Allow only digits, dot, navigation and editing keys by default
+          const allowed = (/^[0-9]$/).test(e.key) || e.key === '.' || e.key === 'Backspace' || e.key === 'Delete' || e.key.startsWith('Arrow') || e.key === 'Home' || e.key === 'End' || e.key === 'Tab' || e.key === 'Escape'
+          if (!allowed) {
+            e.preventDefault()
+          }
+        }}
+        onPaste={e => {
+          // sanitize pasted content and insert at the selection point
+          const paste = e.clipboardData?.getData('text') ?? ''
+          const input = e.currentTarget as HTMLInputElement
+          const start = input.selectionStart ?? input.value.length
+          const end = input.selectionEnd ?? start
+          const newVal = input.value.slice(0, start) + paste + input.value.slice(end)
+          e.preventDefault()
+          onChange(sanitize(newVal))
         }}
       />
     </div>

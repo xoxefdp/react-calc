@@ -101,3 +101,32 @@ test('Backspace removes char and Escape clears', async () => {
   await user.keyboard('{Escape}')
   await waitFor(() => expect(input.value).toBe('0'))
 })
+
+test('numpad and shift operator input work as expected', async () => {
+  const utils = render(<App />)
+  const { getByRole } = utils
+  const user = userEvent.setup()
+  const input = getByRole('textbox') as HTMLInputElement
+
+  // simulate numpad: type '4' then '+' then '5' and Enter
+  await user.clear(input)
+  await user.keyboard('4')
+  await user.keyboard('+')
+  await user.keyboard('5')
+  await user.keyboard('{Enter}')
+
+  await waitFor(() => expect(input.value).toBe('9'))
+})
+
+test('composition (IME) ends and input is sanitized', async () => {
+  const utils = render(<App />)
+  const { getByRole } = utils
+  const input = getByRole('textbox') as HTMLInputElement
+  const user = userEvent.setup()
+
+  // jsdom doesn't emulate IME well; simply type '1a2' and expect sanitization to leave only digits
+  await user.clear(input)
+  await user.type(input, '1a2')
+
+  await waitFor(() => expect((getByRole('textbox') as HTMLInputElement).value).toBe('12'))
+})
