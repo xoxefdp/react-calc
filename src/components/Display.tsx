@@ -9,9 +9,10 @@ type DisplayProps = {
   onEnter?: () => void
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void
   inputRef?: React.RefObject<HTMLInputElement>
+  maxLength?: number
 }
 
-function Display({ current, previous, history = [], onChange, onEnter, onKeyDown, inputRef }: DisplayProps) {
+function Display({ current, previous, history = [], onChange, onEnter, onKeyDown, inputRef, maxLength = 16 }: DisplayProps) {
   const sanitize = (v: string) => {
     // keep only digits and dots
     let s = v.replace(/[^0-9.]/g, '')
@@ -20,6 +21,8 @@ function Display({ current, previous, history = [], onChange, onEnter, onKeyDown
     if (firstDot !== -1) {
       s = s.slice(0, firstDot + 1) + s.slice(firstDot + 1).replace(/\./g, '')
     }
+    // truncate to maxLength
+    if (typeof maxLength === 'number' && maxLength > 0) s = s.slice(0, maxLength)
     return s
   }
 
@@ -36,10 +39,34 @@ function Display({ current, previous, history = [], onChange, onEnter, onKeyDown
         type="text"
         className="calc-input"
         value={current}
+        maxLength={maxLength}
         onChange={e => onChange(sanitize(e.target.value))}
         onKeyDown={e => {
+          // If parent provided a handler, delegate to it (e.g. App.handleKeyDown)
           if (onKeyDown) { onKeyDown(e); return }
-          if (e.key === 'Enter' && onEnter) onEnter()
+
+          // If Enter pressed, trigger onEnter if provided
+          if (e.key === 'Enter') {
+            if (onEnter) onEnter()
+            e.preventDefault()
+            return
+          }
+
+          // Allow only digits, dot, navigation and editing keys by default
+          const allowed = (/^[0-9]$/).test(e.key) || e.key === '.' || e.key === 'Backspace' || e.key === 'Delete' || e.key.startsWith('Arrow') || e.key === 'Home' || e.key === 'End' || e.key === 'Tab' || e.key === 'Escape'
+          if (!allowed) {
+            e.preventDefault()
+          }
+        }}
+        onPaste={e => {
+          // sanitize pasted content and insert at the selection point
+          const paste = e.clipboardData?.getData('text') ?? ''
+          const input = e.currentTarget as HTMLInputElement
+          const start = input.selectionStart ?? input.value.length
+          const end = input.selectionEnd ?? start
+          const newVal = input.value.slice(0, start) + paste + input.value.slice(end)
+          e.preventDefault()
+          onChange(sanitize(newVal))
         }}
       />
     </div>

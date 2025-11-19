@@ -72,12 +72,9 @@ function App() {
   return (
     <>
       <div className='calc-container'>
-        {/* TODO: truncate input length */}
         {/* TODO: let keyboard events others than 'enter'
           to execute actions, like '/', '*', '-', '+' */}
-        {/* TODO: restrain other keyboard events than numbers
-          or operation keys to be inputted */}
-  <Display inputRef={inputRef} onKeyDown={handleKeyDown} current={state.current} previous={state.previous[state.previous.length - 1]} history={state.previous} onChange={setCurrent} onEnter={calculate} />
+        <Display inputRef={inputRef} onKeyDown={handleKeyDown} current={state.current} previous={state.previous[state.previous.length - 1]} history={state.previous} onChange={setCurrent} onEnter={calculate} maxLength={16} />
         {/* TODO: calc buttons should be clicked but not focused */}
         <Keypad keys={buttons} />
       </div>
