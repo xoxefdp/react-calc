@@ -9,9 +9,10 @@ type DisplayProps = {
   onEnter?: () => void
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void
   inputRef?: React.RefObject<HTMLInputElement>
+  maxLength?: number
 }
 
-function Display({ current, previous, history = [], onChange, onEnter, onKeyDown, inputRef }: DisplayProps) {
+function Display({ current, previous, history = [], onChange, onEnter, onKeyDown, inputRef, maxLength = 16 }: DisplayProps) {
   const sanitize = (v: string) => {
     // keep only digits and dots
     let s = v.replace(/[^0-9.]/g, '')
@@ -20,6 +21,8 @@ function Display({ current, previous, history = [], onChange, onEnter, onKeyDown
     if (firstDot !== -1) {
       s = s.slice(0, firstDot + 1) + s.slice(firstDot + 1).replace(/\./g, '')
     }
+    // truncate to maxLength
+    if (typeof maxLength === 'number' && maxLength > 0) s = s.slice(0, maxLength)
     return s
   }
 
@@ -36,6 +39,7 @@ function Display({ current, previous, history = [], onChange, onEnter, onKeyDown
         type="text"
         className="calc-input"
         value={current}
+        maxLength={maxLength}
         onChange={e => onChange(sanitize(e.target.value))}
         onKeyDown={e => {
           if (onKeyDown) { onKeyDown(e); return }

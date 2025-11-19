@@ -43,3 +43,23 @@ test('Display sanitizes input, allowing only digits and one dot', async () => {
   // After typing, the controlled input should reflect the sanitized string '12.34'
   await waitFor(() => expect(input.value).toBe('12.34'))
 })
+
+test('Display truncates input to maxLength', async () => {
+  // use a small maxLength to test truncation easily
+  const Wrapper = () => {
+    const [value, setValue] = React.useState('')
+    return <Display current={value} history={[]} onChange={setValue} maxLength={6} />
+  }
+
+  const utils = render(<Wrapper />)
+  const { getByRole } = utils
+  const input = getByRole('textbox') as HTMLInputElement
+  const user = userEvent.setup()
+
+  // type a long numeric string with extra characters
+  await user.clear(input)
+  await user.keyboard('1234567890abc')
+
+  // sanitized and truncated to 6 characters -> '123456'
+  await waitFor(() => expect(input.value).toBe('123456'))
+})
